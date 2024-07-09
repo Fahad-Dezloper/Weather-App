@@ -1,113 +1,158 @@
-import Image from "next/image";
+"use client"
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-export default function Home() {
+const Page = () => {
+  const [weather, setWeather] = useState(null);
+  const [city, setCity] = useState('Delhi'); 
+  const apiKey = 'fdb7d984a95a30b9f889ba90fa6d2fe4';
+
+  const getWeatherData = async (cityName) => {
+    try {
+      const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=${apiKey}`);
+      setWeather(response.data);
+      console.log(response.data)
+    } catch (error) {
+      console.error('Error fetching weather data:', error);
+    }
+  };
+
+  const getWeatherImage = (temp, icon) => {
+    const celsiusTemp = kelvinToCelsius(temp);
+    const isDay = icon.includes('d');
+    if (celsiusTemp < 0) {
+      return isDay ? 'storm' : 'storm';
+    } else if (celsiusTemp < 15) {
+      return isDay ? 'rain' : 'rain';
+    } else if (celsiusTemp < 30) {
+      return isDay ? 'sun' : 'sun';
+    } else {
+      return isDay ? 'night' : 'night';
+    }
+  }
+
+  useEffect(() => {
+    getWeatherData(city);
+    console.log('Weather Data:', city)
+  }, [city]); 
+
+  const handleFormSubmit = (event) => {
+    event.preventDefault();
+    console.log(event)
+    getWeatherData(city);
+  };
+
+  const getTime = (timezone, timestamp) => {
+    const offset = timezone / 3600; // Convert seconds to hours
+    const localTime = new Date(timestamp * 1000); // Convert seconds to milliseconds
+    const utc = localTime.getTime() + (localTime.getTimezoneOffset() * 60000); // Convert to UTC
+    return new Date(utc + (3600000 * offset)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  };
+
+  const getDate = (timezone, timestamp) => {
+    const offset = timezone / 3600; // Convert seconds to hours
+    const localTime = new Date(timestamp * 1000); // Convert seconds to milliseconds
+    const utc = localTime.getTime() + (localTime.getTimezoneOffset() * 60000); // Convert to UTC
+    return new Date(utc + (3600000 * offset)).toLocaleDateString();
+  };
+
+  const kelvinToCelsius = (kelvin) => {
+    return Math.round(kelvin - 273.15);
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className='flex gap-6 m-8'>
+      {/* Left Sidebar */}
+      <div className='bg-[#202C3C] flex flex-col items-center justify-center gap-8 rounded-2xl h-[90vh] w-[15%]'>
+        <div className='bg-[#3A465C] rounded-3xl p-[9px]'>
+          <div className='wind h-[40px] w-[40px]'></div>
+        </div>
+        <div className='flex items-center flex-col gap-2'>
+          <div className='cloudy h-[40px] w-[40px]'></div>
+          <span className='text-white font-semibold'>Weather</span>
         </div>
       </div>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-full sm:before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full sm:after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
+      {/* Main Content */}
+    <div className='h-[90vh] w-[55%] flex flex-col items-center gap-8 rounded-2xl'>
+        <form onSubmit={handleFormSubmit} className='w-full flex gap-5'>
+          <input 
+            type="text" 
+            value={city} 
+            placeholder='Enter your city' 
+            onChange={(e) => setCity(e.target.value)}  
+            className='bg-[#202C3C] w-[80%] rounded-xl px-4 py-2 text-[#dfdfdf] focus:outline-none' 
+          />
+          <button 
+            type="submit" 
+            className='px-5 py-3 bg-[#3A465C] w-[20%] rounded-xl text-white font-semibold tracking-wide'
+          >
+            Find ⛅
+          </button>
+        </form>
+
+        <div className='flex justify-between items-center w-full px-12'>
+        {weather && (
+          <div className='flex justify-between items-center w-full px-12'>
+            <div className='flex flex-col h-[23vh] justify-between'>
+              <div>
+              <h1 className='text-white text-2xl'>{weather.name}</h1>
+              <div className='flex gap-1'>
+              <p className='text-[#728AAE]'>{getTime(weather.timezone, weather.dt)}</p>
+              <p className='text-[#728AAE]'><span className='font-bold text-white'>:</span> {getDate(weather.timezone, weather.dt)}</p>
+              </div>
+              </div>
+              <h1 className='text-white text-4xl font-semibold'>{kelvinToCelsius(weather.main.temp)}°C</h1>
+            </div>
+            <div>
+              
+            <div className={`w-56 h-56 bg-cover ${getWeatherImage(weather.main.temp, weather.weather[0].icon)}`}>
+            </div>
+            </div>
+          </div>
+        )}
+        </div>
+
+            <div className='bg-[#202C3C] w-full h-full rounded-2xl py-4 px-6'>
+                <h3 className='font-bold text-[#728AAE]'>AIR CONTDITIONS</h3>
+                <div className='flex gap-9 flex-col-reverse p-5'>
+                  <div className='flex justify-between items-center'>
+                  <div className='flex flex-col gap-2 items-start'>
+                    <span className=' text-lg font-semibold text-[#728AAE]'>Humidity</span>
+                    <span className='text-white font-semibold text-2xl'>{weather && weather.main.humidity}%</span>
+                  </div>
+                  <div className='flex flex-col gap-2 items-start'>
+                    <span className=' text-lg font-semibold text-[#728AAE]'>Pressure</span>
+                    <span className='text-white font-semibold text-2xl'>{weather && weather.main.pressure} hPa</span>
+                  </div>
+                  </div>
+                  <div className='flex justify-between items-center'>
+                  <div className='flex flex-col gap-2 items-start'>
+                    <span className=' text-lg font-semibold text-[#728AAE]'>💨 Wind</span>
+                    <span className='text-white font-semibold text-2xl'>{weather && weather.wind.speed} km/s</span>
+                  </div>
+                  {weather && (
+                  <div className='flex flex-col gap-2 items-start'>
+                    <span className=' text-lg font-semibold text-[#728AAE]'>🌡️ Real Feel</span>
+                    <span className='text-white font-semibold text-2xl'>{kelvinToCelsius(weather.main.temp)}°C</span>
+                  </div>
+                  )}
+                  </div>
+                </div>
+              </div>
+
+
+
       </div>
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50 text-balance`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
+      {/* Right Sidebar */}
+      <div className='bg-[#202C3C] h-[90vh] w-[30%] flex items-center justify-center rounded-2xl'>
+      <div className='bg-[#3A465C] rounded-full w-fit p-10 rotate-90'>
+          <div className='wind h-[160px] w-[160px]'></div>
+        </div>
       </div>
-    </main>
+    </div>
   );
-}
+};
+
+export default Page;
